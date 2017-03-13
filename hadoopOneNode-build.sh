@@ -218,9 +218,7 @@ EOF1
 EOF2
 
         mount -a
-        
     fi
-    
 }
 
 
@@ -259,7 +257,6 @@ EOFaddGroups
 
 function addUsers()
 {
-
     if ! id -a oracle 2> /dev/null; then
         /usr/sbin/useradd -u 55555 -g hadoop hadoop -p c6kTxMi2LR1l2
     else
@@ -274,7 +271,7 @@ function installHadoopOneNode()
     local l_log=$LOG_DIR/$g_prog.install.$$.log
     
     chmod 755 /u01
-    mkdir -p /u01/app/hadoop
+    mkdir -p /u01/app/
     chown -R hadoop:hadoop /u01/app
     mkdir /var/log/hadoop
     chown hadoop:hadoop /var/log/hadoop
@@ -287,9 +284,10 @@ function installHadoopOneNode()
     cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
     chmod 0600 ~/.ssh/authorized_keys
     
-    cd /u01/app/hadoop
+    cd /u01/app/
     export JAVA_HOME=/etc/alternatives/jre_1.8.0
     tar xzf /mnt/software/hadoop/hadoop-2.7.3.tar.gz
+    cd hadoop-2.7.3
     
     cp etc/hadoop/core-site.xml etc/hadoop/core-site.xml.orig
     cp etc/hadoop/hdfs-site.xml etc/hadoop/hdfs-site.xml.orig
@@ -352,7 +350,9 @@ EOFinstall
 }
 
 function openFirewall() {
-    firewall-cmd --zone=public --add-port=8088,9000,50070,/tcp --permanent
+    firewall-cmd --zone=public --add-port=8088/tcp --permanent
+    firewall-cmd --zone=public --add-port=9000/tcp --permanent
+    firewall-cmd --zone=public --add-port=50070/tcp --permanent
     firewall-cmd --reload
     firewall-cmd --zone=public --list-all
 }
@@ -385,7 +385,7 @@ function run()
     openFirewall
     addGroups
     addUsers
-    installHadoop
+    installHadoopOneNode
 }
 
 
