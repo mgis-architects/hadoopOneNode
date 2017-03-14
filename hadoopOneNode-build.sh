@@ -291,6 +291,8 @@ function installHadoopOneNode()
     export JAVA_HOME=/etc/alternatives/jre_1.7.0
     tar xzf /mnt/software/hadoop/hadoop-2.7.3.tar.gz
     
+    cd /u01/app/hadoop/hadoop-2.7.3/
+    
     cp etc/hadoop/hadoop-env.sh etc/hadoop/hadoop-env.sh.orig    
     cat etc/hadoop/hadoop-env.sh.orig | sed 's/export JAVA_HOME=..JAVA_HOME./JAVA_HOME=\/etc\/alternatives\/jre_1.7.0/' > etc/hadoop/hadoop-env.sh
     
