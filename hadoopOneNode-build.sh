@@ -286,7 +286,11 @@ function installHadoopOneNode()
     ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
     cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
     chmod 0600 ~/.ssh/authorized_keys
-    
+    cat > ~/.ssh/config << EOFssh
+        StrictHostKeyChecking=no
+EOFssh
+    chmod 600 ~/.ssh/config
+
     cd /u01/app/hadoop
     export JAVA_HOME=/etc/alternatives/jre_1.7.0
     tar xzf /mnt/software/hadoop/hadoop-2.7.3.tar.gz
@@ -318,12 +322,11 @@ EOFcs
 EOFhs
 
     bin/hdfs namenode -format
-    nohup sbin/start-dfs.sh > /var/log/hadoop/dfs.log 2>&1 &
+    sbin/start-dfs.sh 
     sleep 5
     
     bin/hdfs dfs -mkdir /user
     bin/hdfs dfs -mkdir /user/hadoop
-    bin/hdfs dfs -put etc/hadoop input
    
     cp etc/hadoop/mapred-site.xml etc/hadoop/mapred-site.xml.orig
     cp etc/hadoop/yarn-site.xml etc/hadoop/yarn-site.xml.orig
@@ -346,17 +349,17 @@ EOFyarn1
 </configuration>
 EOFyarn2
 
-    nohup sbin/start-yarn.sh > /var/log/hadoop/yarn.log 2>&1 &
+    sbin/start-yarn.sh
 
-    sleep 5
-    bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.3.jar grep input output 'dfs[a-z.]+'
-    bin/hdfs dfs -cat output/*
-    bin/hdfs dfs -rm /user/hadoop/input/*
-    bin/hdfs dfs -rm /user/hadoop/output/*
+#     bin/hdfs dfs -put etc/hadoop input
+#     sleep 5
+#     bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.3.jar grep input output 'dfs[a-z.]+'
+#     bin/hdfs dfs -cat output/*
+#     bin/hdfs dfs -rm /user/hadoop/input/*
+#     bin/hdfs dfs -rm /user/hadoop/output/*
 EOFinstall
 
-    su - hadoop -c "bash -x ${l_script} 2>&1 | tee ${l_log}"    
-
+    su - hadoop -c "bash -x ${l_script} 2>&1 | tee ${l_log}"
 }
 
 function openFirewall() {
