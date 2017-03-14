@@ -218,7 +218,9 @@ EOF1
 EOF2
 
         mount -a
+        
     fi
+    
 }
 
 
@@ -257,6 +259,7 @@ EOFaddGroups
 
 function addUsers()
 {
+
     if ! id -a oracle 2> /dev/null; then
         /usr/sbin/useradd -u 55555 -g hadoop hadoop -p c6kTxMi2LR1l2
     else
@@ -271,7 +274,7 @@ function installHadoopOneNode()
     local l_log=$LOG_DIR/$g_prog.install.$$.log
     
     chmod 755 /u01
-    mkdir -p /u01/app/
+    mkdir -p /u01/app/hadoop
     chown -R hadoop:hadoop /u01/app
     mkdir /var/log/hadoop
     chown hadoop:hadoop /var/log/hadoop
@@ -284,10 +287,12 @@ function installHadoopOneNode()
     cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
     chmod 0600 ~/.ssh/authorized_keys
     
-    cd /u01/app/
-    export JAVA_HOME=/etc/alternatives/jre_1.8.0
+    cd /u01/app/hadoop
+    export JAVA_HOME=/etc/alternatives/jre_1.7.0
     tar xzf /mnt/software/hadoop/hadoop-2.7.3.tar.gz
-    cd hadoop-2.7.3
+    
+    cp etc/hadoop/hadoop-env.sh etc/hadoop/hadoop-env.sh.orig    
+    cat etc/hadoop/hadoop-env.sh.orig | sed 's/export JAVA_HOME=..JAVA_HOME./JAVA_HOME=\/etc\/alternatives\/jre_1.7.0/' > etc/hadoop/hadoop-env.sh
     
     cp etc/hadoop/core-site.xml etc/hadoop/core-site.xml.orig
     cp etc/hadoop/hdfs-site.xml etc/hadoop/hdfs-site.xml.orig
@@ -312,13 +317,12 @@ EOFhs
 
     bin/hdfs namenode -format
     nohup sbin/start-dfs.sh > /var/log/hadoop/dfs.log 2>&1 &
+    sleep 5
     
     bin/hdfs dfs -mkdir /user
     bin/hdfs dfs -mkdir /user/hadoop
     bin/hdfs dfs -put etc/hadoop input
-    bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.3.jar grep input output 'dfs[a-z.]+'
-    bin/hdfs dfs -cat output/*
-    
+   
     cp etc/hadoop/mapred-site.xml etc/hadoop/mapred-site.xml.orig
     cp etc/hadoop/yarn-site.xml etc/hadoop/yarn-site.xml.orig
     
@@ -341,18 +345,20 @@ EOFyarn1
 EOFyarn2
 
     nohup sbin/start-yarn.sh > /var/log/hadoop/yarn.log 2>&1 &
-    
+
+    sleep 5
+    bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.3.jar grep input output 'dfs[a-z.]+'
+    bin/hdfs dfs -cat output/*
+    bin/hdfs dfs -rm /user/hadoop/input/*
+    bin/hdfs dfs -rm /user/hadoop/output/*
 EOFinstall
 
-    su - hadoop -c "bash -x ${l_script} 2>&1 | tee ${l_log}"
-    
+    su - hadoop -c "bash -x ${l_script} 2>&1 | tee ${l_log}"    
 
 }
 
 function openFirewall() {
-    firewall-cmd --zone=public --add-port=8088/tcp --permanent
-    firewall-cmd --zone=public --add-port=9000/tcp --permanent
-    firewall-cmd --zone=public --add-port=50070/tcp --permanent
+    firewall-cmd --zone=public --add-port=8088,9000,50070,/tcp --permanent
     firewall-cmd --reload
     firewall-cmd --zone=public --list-all
 }
@@ -385,7 +391,7 @@ function run()
     openFirewall
     addGroups
     addUsers
-    installHadoopOneNode
+    installHadoop
 }
 
 
