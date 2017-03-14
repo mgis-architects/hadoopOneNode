@@ -358,7 +358,9 @@ EOFinstall
 }
 
 function openFirewall() {
-    firewall-cmd --zone=public --add-port=8088,9000,50070,/tcp --permanent
+    firewall-cmd --zone=public --add-port=8088/tcp --permanent
+    firewall-cmd --zone=public --add-port=9000/tcp --permanent
+    firewall-cmd --zone=public --add-port=50070/tcp --permanent
     firewall-cmd --reload
     firewall-cmd --zone=public --list-all
 }
@@ -391,7 +393,7 @@ function run()
     openFirewall
     addGroups
     addUsers
-    installHadoop
+    installHadoopOneNode
 }
 
 
